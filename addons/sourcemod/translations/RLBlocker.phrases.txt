@@ -1,0 +1,30 @@
+Phrases 
+{
+	"Chat_Slap"
+	{
+		"ru"		"Вы были убиты, так как воспользовались {team}багом{default}!"
+		"en"		"You were killed because you exploited a {team}bug{default}!"
+	}
+	"Chat_Changed_Team"
+	{
+		"ru"		"Вы были переведены в {green}спектаторы{default}, так как воспользовались {team}багом{default}!"
+		"en"		"You have been thrown to {green}spectators{default} because you exploited {team}bug{default}!"
+	}
+	
+	"Kick_Info"
+	{
+		"ru"		"Вы были выкинуты с сервера за использование бага"
+		"en"		"You were kicked the server for using a bug"
+	}
+	"Ban_Info"
+	{
+		"#format"	"{1:i}"
+		"ru"		"Вы были забанены на {1} минут по причине использования бага"
+		"en"		"You were banned for {1} minutes because you were using a bug"
+	}
+	"Ban_Reason"
+	{
+		"ru"		"Использование +right/+left в АФК"
+		"en"		"Using +right/+left in AFK"
+	}
+}
