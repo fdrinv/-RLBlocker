@@ -26,7 +26,7 @@
 #include <autoexecconfig>   
 
 // Plugin Define
-#define PLUGIN_VERSION              "1.1 Beta"
+#define PLUGIN_VERSION              "1.2 Release"
 #define PLUGIN_AUTHOR 	            "DENFER"
 
 #define MAX_ATTEMPTS                5
@@ -40,7 +40,6 @@
 // Handles 
 Handle  g_hTimerAFK,
         g_hTimerRL[MAXPLAYERS + 1],
-        g_hTimerTest[2]; // два таймера, которые никак не влиют на игровой процес, нужны только для дебага и сборы информации.
 
 // ConVars
 ConVar  gc_sPrefix,
@@ -61,11 +60,6 @@ float   g_fPreviousEyeAngles[MAXPLAYERS + 1][3],
 
 // Integers 
 int     g_iAttempts[MAXPLAYERS + 1]; 
-
-// Booleans
-// TODO: Удалить тестовую переменную g_bIsTest после официального релиза
-bool    g_bIsTest[MAXPLAYERS + 1]; // переменная для теста
-
 
 // Informations
 public Plugin myinfo = {
@@ -132,7 +126,7 @@ public void OnConfigsExecuted() {
 public Action Timer_CheckAFK(Handle timer) {
 
     for (int i = 0; i <= MaxClients; ++i) {
-        if (IsValidClient(i) && IsPlayerAlive(i) && !g_bIsTest[i]) {
+        if (IsValidClient(i) && IsPlayerAlive(i)) {
             // Учитыывая, что текущие координаты присваиваются при возрождение игрока, это наилучшее место для присваивания предыдущих координат
             g_fPreviousCoordinates[i] = g_fCurrentCoordinates[i];
             GetClientAbsOrigin(i, g_fCurrentCoordinates[i]);
@@ -157,7 +151,7 @@ public Action Timer_CheckRL(Handle timer, int userid) {
 
     int client = GetClientOfUserId(userid);
 
-    if (IsValidClient(client) && IsPlayerAlive(client) && !g_bIsTest[client]) {
+    if (IsValidClient(client) && IsPlayerAlive(client)) {
         GetClientEyeAngles(client, g_fCurrentEyeAngles[client]);
         GetClientAbsOrigin(client, g_fCurrentCoordinates[client]);
         
@@ -291,8 +285,6 @@ public void UpdateData(int client) {
     GetClientAbsOrigin(client, g_fCurrentCoordinates[client]);
 
     g_iAttempts[client] = 0;
-
-    g_bIsTest[client] = false;
 }
 
 public bool IsValidClient(int client) {
@@ -302,120 +294,4 @@ public bool IsValidClient(int client) {
     }
 
     return false;
-}
-
-/*
-/ Дальше идет дебажная информация, она нужна исключительно для меня и людей, 
-/ которые готовы помочь в развитие плагина. 
-*/
-public Action CallBack_RLCreateLogs(int client, int args) {
-
-    g_bIsTest[client] = true;
-
-    // Создаем путь к файлу с логами
-    if (!DirExists("addons/sourcemod/logs/DENFER/RLBlocker")) {
-        CreateDirectory("addons/sourcemod/logs", 511);
-        CreateDirectory("addons/sourcemod/logs/DENFER", 511);
-        CreateDirectory("addons/sourcemod/logs/DENFER/RLBlocker", 511);
-    }
-
-    char fileName[32], path[PLATFORM_MAX_PATH] = "addons/sourcemod/logs/DENFER/RLBlocker";
-
-    FormatTime(fileName, sizeof(fileName), "%d.%m.%Y"); // 09.12.2021
-    FormatEx(path, sizeof(path), "%s/%s.log", path, fileName); // 09.12.2021.log
-
-    File file = OpenFile(path, "w");
-
-    CPrint(client, _, "[DENFER]: Спасибо, что помогаете улучшить плагин - напишите в консоле {green}+right{default} или {green}+left{default}");
-    CPrint(client, _, "[DENFER]: Как только проверка закончится продублируйте команды, только уже с минусом {green}-right{default} или {green}-left{default} соответственно, благодарю за помощь!");
-
-    // Определяем игру
-    char buffer[64];
-    switch (GetEngineVersion()) {
-        case Engine_CSGO: {
-            FormatEx(buffer, sizeof(buffer), "Counter-Strike: Global Offensive");
-        }
-        case Engine_CSS: {
-            FormatEx(buffer, sizeof(buffer), "Counter-Strike: Source");
-        }
-        default: {
-            FormatEx(buffer, sizeof(buffer), "Other");
-        }
-    }
-    LogToFileEx(path, buffer);
-    FormatEx(buffer, sizeof(buffer), "TickRate = %f", 1.0 / GetTickInterval()); // Получаем тикрейт сервера
-    LogToFileEx(path, buffer);
-    LogToFileEx(path, "--------------- Проверка запущена ---------------");
-    
-    if (g_hTimerTest[0] != null) {
-        KillTimer(g_hTimerTest[0]);
-        g_hTimerTest[0] = null;
-    }
-
-    g_hTimerTest[0] = CreateTimer(90.0, Timer_Test, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-
-    if (g_hTimerTest[1] != null) {
-        KillTimer(g_hTimerTest[1]);
-        g_hTimerTest[1] = null;
-    }
-
-    g_hTimerTest[1] = CreateTimer(RL_TIME, Timer_CheckRLTest, GetClientUserId(client), TIMER_REPEAT);
-
-    delete file;
-    return Plugin_Handled;
-}
-
-public Action Timer_Test(Handle timer, int userid) {
-    int client = GetClientOfUserId(userid);
-
-    if (IsValidClient(client)) {
-        g_bIsTest[client] = false;
-    }
-
-    if (g_hTimerTest[1] != null) {
-        KillTimer(g_hTimerTest[1]);
-        g_hTimerTest[1] = null;
-    }
-
-    char fileName[32], path[PLATFORM_MAX_PATH] = "addons/sourcemod/logs/DENFER/RLBlocker";
-
-    FormatTime(fileName, sizeof(fileName), "%d.%m.%Y"); // 09.12.2021
-    FormatEx(path, sizeof(path), "%s/%s.log", path, fileName); // 09.12.2021.log
-
-    LogToFileEx(path, "--------------- Проверка окончена ---------------");
-    LogToFileEx(path, "Данный файл содержит информацию по работе плагина на вашем сервере.");
-    LogToFileEx(path, "По вашему желанию вы можете отправить файл мне: {green}vk.com/fedorinovea{default} или {green}hlmod.ru/members/denfer.126978{default}");
-    CPrint(client, _, "[DENFER]: Проверка успешно закончена, загляните в {green}addons/sourcemod/logs/DENFER/RLBlocker{default} и по возможности отправьте файл мне, спасибо!");
-
-    g_hTimerTest[0] = null;
-    return Plugin_Stop;
-}
-
-public Action Timer_CheckRLTest(Handle timer, int userid) {
-
-    int client = GetClientOfUserId(userid);
-
-    if (IsValidClient(client) && IsPlayerAlive(client)) {
-        GetClientEyeAngles(client, g_fCurrentEyeAngles[client]);
-        GetClientAbsOrigin(client, g_fCurrentCoordinates[client]);
-
-        g_fDifferenceEyeAngles[client][1] = float(RoundToNearest(g_fPreviousEyeAngles[client][1] - g_fCurrentEyeAngles[client][1]));
-
-        // Выводим информацию 
-        char fileName[32], path[PLATFORM_MAX_PATH] = "addons/sourcemod/logs/DENFER/RLBlocker";
-
-        FormatTime(fileName, sizeof(fileName), "%d.%m.%Y"); // 09.12.2021
-        FormatEx(path, sizeof(path), "%s/%s.log", path, fileName); // 09.12.2021.log
-
-        LogToFileEx(path, "Y = %f, Difference Between Angles = %f", g_fCurrentEyeAngles[client][1], FloatAbs(g_fDifferenceEyeAngles[client][1]));
-
-        for (int i = 0; i < 2; ++i) {
-            g_fPreviousEyeAngles[client][i] = g_fCurrentEyeAngles[client][i];
-        }
-
-        return Plugin_Continue;
-    } 
-
-    g_hTimerTest[1] = null;
-    return Plugin_Stop;
 }
