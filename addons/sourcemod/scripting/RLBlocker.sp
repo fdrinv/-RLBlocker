@@ -26,7 +26,7 @@
 #include <autoexecconfig>   
 
 // Plugin Define
-#define PLUGIN_VERSION              "1.2 Release"
+#define PLUGIN_VERSION              "1.3 Release"
 #define PLUGIN_AUTHOR 	            "DENFER"
 
 #define MAX_ATTEMPTS                5
@@ -39,7 +39,7 @@
 
 // Handles 
 Handle  g_hTimerAFK,
-        g_hTimerRL[MAXPLAYERS + 1],
+        g_hTimerRL[MAXPLAYERS + 1];
 
 // ConVars
 ConVar  gc_sPrefix,
@@ -76,9 +76,6 @@ public void OnPluginStart() {
     // AutoExecConfig
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("RLBlock", PLUGIN_AUTHOR);
-
-    // Console Commands
-    RegAdminCmd("sm_rl", CallBack_RLCreateLogs, ADMFLAG_ROOT);
 
     // ConVars
     gc_sPrefix =            AutoExecConfig_CreateConVar("sm_rl_prefix", "[SM]", "Префикс перед сообщениями плагина.");
