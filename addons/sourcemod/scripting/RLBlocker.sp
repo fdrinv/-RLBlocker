@@ -26,7 +26,7 @@
 #include <autoexecconfig>   
 
 // Plugin Define
-#define PLUGIN_VERSION              "1.3 Release"
+#define PLUGIN_VERSION              "1.2 Release"
 #define PLUGIN_AUTHOR 	            "DENFER"
 
 #define MAX_ATTEMPTS                5
