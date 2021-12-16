@@ -93,22 +93,26 @@ public void OnPluginStart() {
     AutoExecConfig_CleanFile();
 }
 
-void Event_OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
+public void Event_OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 
     // Если не стоит првоерять на багаюз во время разминки
     if (!gc_bWarmupPeriod.BoolValue && GameRules_GetProp ("m_bWarmupPeriod")) {
+
+        if (g_hTimerAFK != null) {
+            delete g_hTimerAFK;
+        }
+
         return;
     }
 
     if (g_hTimerAFK != null) {
-        KillTimer(g_hTimerAFK);
-        g_hTimerAFK = null;
+        delete g_hTimerAFK;
     }
 
     g_hTimerAFK = CreateTimer(gc_flCheckIntervalAFK.FloatValue, Timer_CheckAFK, _, TIMER_REPEAT);
 }
 
-void Event_OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast) { 
+public void Event_OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast) { 
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
     if (IsValidClient(client)) {
@@ -118,6 +122,13 @@ void Event_OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast) {
 
 public void OnConfigsExecuted() {
     gc_sPrefix.GetString(g_sPrefix, sizeof(g_sPrefix));
+}
+
+public void OnClientDisconnect(int client)
+{
+	if(g_hTimerRL[client] != null) {
+        delete g_hTimerRL[client];
+    }
 }
 
 public Action Timer_CheckAFK(Handle timer) {
@@ -132,8 +143,7 @@ public Action Timer_CheckAFK(Handle timer) {
             if (!IsDifferenceBetweenCoordinates(g_fCurrentCoordinates[i], g_fPreviousCoordinates[i])) {
                 // По идеи это может закрыть уже работающий таймер, но это не важно, так как сразу же будет запущен новый с сохраненными данными с прошлого
                 if (g_hTimerRL[i] != null) {
-                    KillTimer(g_hTimerRL[i]);
-                    g_hTimerRL[i] = null;
+                    delete g_hTimerRL[i];
                 }
 
                 g_hTimerRL[i] = CreateTimer(RL_TIME, Timer_CheckRL, GetClientUserId(i), TIMER_REPEAT);
